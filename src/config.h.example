@@ -1,0 +1,13 @@
+#define TIMEZONE 2
+#define LOGPERIOD 1000
+
+const char* ssid     = "SSID";
+const char* password = "PSK";
+
+const char *time_server = "nl.pool.ntp.org";
+const char *mqtt_server = "mqtt.broker.com";
+const unsigned int mqtt_port = 1883;
+const char *topic = "actuators/clientId";
+
+const int publishInterval = 1000;
+const unsigned int speed = 255;
