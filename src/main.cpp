@@ -210,7 +210,7 @@ void setup()
 
   Wire.begin(SDA, SCL);
 
-  if (!mcp1.begin_I2C(0x20))
+  if (!mcp1.begin_I2C(mcp1Address))
   {
     Serial.println(F("MCPERR"));
 
