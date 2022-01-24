@@ -49,6 +49,7 @@ String byteToString(byte *_byte, unsigned _len)
 void callback(char *topic, byte *payload, unsigned int length) // de payload die je krijgt moet zijn in de form van XY X = 1 of 0 en Y = motor nummer
 {
   String _payload = byteToString(payload, length);
+  unsigned _motorNumber = String(_payload[1]).toInt();
 
   Serial.println("Message arrived [" + (String)topic + "]: " + _payload);
 
@@ -56,17 +57,17 @@ void callback(char *topic, byte *payload, unsigned int length) // de payload die
   {
   case '0': // off
     digitalWrite(LED_BUILTIN, LOW); // Turn the LED on (Note that LOW is the voltage level
-    Serial.print(F("\tChannel OFF: ") + String(_payload[1]));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_payload[1]).c_str());
+    Serial.print(F("\tChannel OFF: ") + String(_motorNumber));
+    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber) + F("/state")).c_str(), "OFF");
 
-    motors[String(_payload[1]).toInt()]->stop();
+    motors[_motorNumber]->stop();
     break;
   case '1': // on
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED off (Note that LOW is the voltage level
-    Serial.print(F("\tChannel ON: ") + String(_payload[1]));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_payload[1]).c_str());
+    Serial.print(F("\tChannel ON: ") + String(_motorNumber));
+    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber) + F("/state")).c_str(), "OM");
 
-    motors[String(_payload[1]).toInt()]->forward();
+    motors[_motorNumber]->forward();
     break;
   }
 }
