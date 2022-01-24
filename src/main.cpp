@@ -3,7 +3,6 @@
 
 String clientId = "BlenderRodriguez";
 
-
 unsigned long lastReconnectAttempt = 0;
 
 Adafruit_MCP23X17 mcp1;
@@ -28,7 +27,7 @@ String whenDose;    // dateTime (when to dose?)
 String lastDose;    // dateTime
 String currentTime; // dateTime
 
-extDcMotor* motors[4];  // hier stop ik alle motoren in, dat bespaard vier keer dezelfde code clusterfucken
+extDcMotor *motors[4]; // hier stop ik alle motoren in, dat bespaard vier keer dezelfde code clusterfucken
 extDcMotor motor1(0, 1);
 extDcMotor motor2(2, 3);
 extDcMotor motor3(4, 5);
@@ -55,14 +54,14 @@ void callback(char *topic, byte *payload, unsigned int length) // de payload die
 
   switch (_payload[0])
   {
-  case '0': // off
+  case '0':                         // off
     digitalWrite(LED_BUILTIN, LOW); // Turn the LED on (Note that LOW is the voltage level
     Serial.print(F("\tChannel OFF: ") + String(_motorNumber));
     MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber) + F("/state")).c_str(), "OFF");
 
     motors[_motorNumber]->stop();
     break;
-  case '1': // on
+  case '1':                          // on
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED off (Note that LOW is the voltage level
     Serial.print(F("\tChannel ON: ") + String(_motorNumber));
     MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber) + F("/state")).c_str(), "OM");
@@ -206,6 +205,9 @@ void setup()
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+  MQTTclient.setServer(mqtt_server, mqtt_port);
+  MQTTclient.setCallback(callback);
+
   Wire.begin(SDA, SCL);
 
   if (!mcp1.begin_I2C(0x20))
@@ -228,11 +230,10 @@ void setup()
       Serial.println("Setup channel: " + String(_i));
       motors[_i]->begin(&mcp1);
       motors[_i]->stop();
+
+      MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch") + String(_i) + F("/command")).c_str());
     }
   }
-
-  MQTTclient.setServer(mqtt_server, mqtt_port);
-  MQTTclient.setCallback(callback);
 
   threadPublish.enabled = true;
   threadPublish.setInterval(LOGPERIOD);
