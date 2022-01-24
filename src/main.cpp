@@ -98,6 +98,7 @@ void threadPublishCallback()
   // MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch4/command")).c_str());
   // MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch4/state")).c_str(), String(_Ch4).c_str());
   // mqtt vars
+
   String _payload = "{\"clientId\":";
   _payload += (String)clientId;
 
@@ -138,9 +139,6 @@ void threadPublishCallback()
 
   MQTTclient.publish(String(F("sensors/") + clientId + F("/json")).c_str(), _payload.c_str());
 }
-
-// Thread threadCurrentLog = Thread();
-// StaticThreadController<1> threadController (&threadCurrentLog);
 
 boolean reconnect() // Called when client is disconnected from the MQTT server
 {
@@ -194,16 +192,17 @@ void setup()
 
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
+
   clientId += F("-") + generateClientIdFromMac();
 
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
     Serial.print(".");
+    delay(500);
   }
   Serial.println();
 
-  Serial.println("WiFi connected");
+  Serial.println("WiFi connected!");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
@@ -238,16 +237,10 @@ void setup()
   threadPublish.enabled = true;
   threadPublish.setInterval(LOGPERIOD);
   threadPublish.onRun(threadPublishCallback);
-
-  /*  if (!MQTTclient.connected())    // overbodig, gebeurd al in loop
-    {
-      reconnect();
-    }*/
 }
 
 void loop()
 {
-  // Serial.println("arrived at loop");
   if (!MQTTclient.connected())
   {
     unsigned long _now = millis();
