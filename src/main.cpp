@@ -11,17 +11,8 @@ Adafruit_MCP23X17 mcp1;
 float waterCurrentPH;
 
 bool channel[4]; // stop je waarden in een array
-/*bool Ch1;
-bool Ch2;
-bool Ch3;
-bool Ch4;*/
 
 unsigned int dose[5]; // stop je waarden in een array
-/*int relativeDose1; // in milliliters per milliliters
-int relativeDose2; // in milliliters per milliliters
-int relativeDose3; // in milliliters per milliliters
-int relativeDose4; // in milliliters per milliliters
-int absoluteDose;  // how much water we dose each time we blend the nutrients.*/
 
 String whenDose;    // dateTime (when to dose?)
 String lastDose;    // dateTime
@@ -57,14 +48,14 @@ void callback(char *topic, byte *payload, unsigned int length) // de payload die
   case '0':                         // off
     digitalWrite(LED_BUILTIN, LOW); // Turn the LED on (Note that LOW is the voltage level
     Serial.print(F("\tChannel OFF: ") + String(_motorNumber));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber) + F("/state")).c_str(), "OFF");
+    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber+1) + F("/state")).c_str(), "OFF");
 
     motors[_motorNumber]->stop();
     break;
   case '1':                          // on
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED off (Note that LOW is the voltage level
     Serial.print(F("\tChannel ON: ") + String(_motorNumber));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber) + F("/state")).c_str(), "OM");
+    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch") + String(_motorNumber+1) + F("/state")).c_str(), "OM");
 
     motors[_motorNumber]->forward();
     break;
@@ -80,23 +71,7 @@ void threadPublishCallback()
   Serial.print(F("\tCurrentPh: ") + String(_CurrentPh));
   MQTTclient.publish(String(F("sensors/") + clientId + F("/CurrentPh")).c_str(), String(_CurrentPh).c_str());
 
-  // Serial.print(F("\tCh1: ") + String(_Ch1));
-  // MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_Ch1).c_str());
-  // MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch1/command")).c_str());
-  //
-  // // MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch2/state")).c_str(), String(_Ch2).c_str());
-  // Serial.print(F("\tCh2: ") + String(_Ch3));
-  // MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch2/command")).c_str());
-  // MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch2/state")).c_str(), String(_Ch3).c_str());
-  //
-  // Serial.print(F("\tCh3: ") + String(_Ch3));
-  // MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch3/command")).c_str());
-  // MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch/state")).c_str(), String(_Ch3).c_str());
-  //
-  // Serial.print(F("\tCh4: ") + String(_Ch4));
-  // MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch4/command")).c_str());
-  // MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch4/state")).c_str(), String(_Ch4).c_str());
-  // mqtt vars
+  // JSON Payload
 
   String _payload = "{\"clientId\":";
   _payload += (String)clientId;
@@ -115,21 +90,6 @@ void threadPublishCallback()
 
   _payload += ",\"Ch4\":";
   _payload += String(channel[3]);
-  // float currentDose;
-  // float targetDose;
-  //
-  // String whenDose; //dateTime (when to dose?)
-  // String lastDose; //dateTime
-  // String currentTime;//dateTime
-  // _payload += ",\"currentDose\":";
-  // _payload += (float)currentDose;
-  // _payload += ",\"targetDose\":";
-  // _payload += (float)targetDose;
-  //
-  // _payload += ",\"whenDose\":";
-  // _payload += (String)whenDose;
-  // _payload += ",\"lastDose\":";
-  // _payload += (String)lastDose;
 
   Serial.println(F("\ttime: ") + String(timeClient.getEpochTime()));
   MQTTclient.publish(String(F("sensors/") + clientId + F("/debug/connected")).c_str(), String(timeClient.getEpochTime()).c_str());
@@ -169,18 +129,6 @@ String generateClientIdFromMac() // Convert the WiFi MAC address to String
 
   return _output;
 }
-
-/*String macToStr(const uint8_t *mac) // ongebruikte functie
-{
-  String result;
-  for (int i = 0; i < 6; ++i)
-  {
-    result += String(mac[i], 16);
-    if (i < 5)
-      result += ':';
-  }
-  return result;
-}*/
 
 void setup()
 {
@@ -231,13 +179,15 @@ void setup()
       motors[_i]->begin(&mcp1);
       motors[_i]->stop();
 
-      MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch") + String(_i) + F("/command")).c_str());
     }
+
+
   }
 
   threadPublish.enabled = true;
   threadPublish.setInterval(LOGPERIOD);
   threadPublish.onRun(threadPublishCallback);
+
 }
 
 void loop()
@@ -253,6 +203,12 @@ void loop()
       if (reconnect())
       {
         lastReconnectAttempt = 0;
+        for (unsigned _i = 0; _i < 4; _i++)
+        {
+          MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch") + String(_i + 1) + F("/command")).c_str());
+          // debugging subscrition topics...
+          Serial.print(F("Subscribing to: "));Serial.println(String(F("actuators/") + clientId + F("/Ch") + String(_i) + F("/command")).c_str());
+        }
       }
     }
   }
@@ -260,7 +216,6 @@ void loop()
   {
     MQTTclient.loop();
   }
-
   // Run threads, this makes it all work on time!
   threadController.run();
 }

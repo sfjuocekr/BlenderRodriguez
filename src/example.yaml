@@ -1,0 +1,53 @@
+sensor:
+    - platform: mqtt
+    name: "Water PH"
+    unique_id: "/BlenderRodriguez-MAC/CurrentPh"
+    unit_of_measurement: "Ph"
+    state_topic: "sensors/BlenderRodriguez-MAC/CurrentPh"
+    payload_available: "online"
+    payload_not_available: "offline"
+    state_class: "measurement"
+switch:
+  - platform: mqtt
+    name: "Doser Ch. 1"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch1/command"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch1/state"
+    unique_id: "BlenderRodriguez-MAC/Ch1"
+    payload_on: 1
+    payload_off: 0
+    state_on: 1
+    state_off: 0
+    optimistic: false
+    qos: 0
+    retain: true
+  - platform: mqtt
+    name: "Doser Ch. 2"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch2/state"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch2/command"
+    unique_id: "BlenderRodriguez-MAC/Ch2"
+    payload_on: 1
+    payload_off: 0
+    state_on: 1
+    state_off: 0
+    optimistic: false
+    qos: 0
+    retain: true
+  - platform: mqtt
+    name: "Doser Ch. 3"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch3/state"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch3/command"
+    unique_id: "BlenderRodriguez-MAC/Ch3"
+    payload_on: 1
+    payload_off: 0
+    state_on: 0
+    state_off: 1
+    optimistic: false
+    qos: 0
+    retain: true
+  - platform: mqtt
+    name: "Doser Ch. 4"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch4/state"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch4/command"
+    unique_id: "BlenderRodriguez-MAC/Ch4"
+    payload_on: 1
+    payload_off: 0
