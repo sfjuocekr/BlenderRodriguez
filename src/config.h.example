@@ -1,3 +1,6 @@
+#define SDA 2
+#define SCL 0
+#define mcp1Address 0x20
 #define TIMEZONE 2
 #define LOGPERIOD 1000
 
@@ -11,3 +14,4 @@ const char *topic = "actuators/clientId";
 
 const int publishInterval = 1000;
 const unsigned int speed = 255;
+

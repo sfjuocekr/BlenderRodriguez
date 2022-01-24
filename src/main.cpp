@@ -3,96 +3,77 @@
 
 String clientId = "BlenderRodriguez";
 
-#include <Wire.h>
 
-
-#define SDA 2
-#define SCL 0
-
-#define mcp1Address 0x20
-//define log thread period
-// #define LOG_PERIOD 10
-
-
+unsigned long lastReconnectAttempt = 0;
 
 Adafruit_MCP23X17 mcp1;
 
-
-
-//mqtt vars
+// mqtt vars
 float waterCurrentPH;
 
-bool Ch1;
+bool channel[4]; // stop je waarden in een array
+/*bool Ch1;
 bool Ch2;
 bool Ch3;
-bool Ch4;
+bool Ch4;*/
 
-int relativeDose1;// in milliliters per milliliters
-int relativeDose2;// in milliliters per milliliters
+unsigned int dose[5]; // stop je waarden in een array
+/*int relativeDose1; // in milliliters per milliliters
+int relativeDose2; // in milliliters per milliliters
 int relativeDose3; // in milliliters per milliliters
 int relativeDose4; // in milliliters per milliliters
-int absoluteDose; // how much water we dose each time we blend the nutrients.
+int absoluteDose;  // how much water we dose each time we blend the nutrients.*/
 
-String whenDose; //dateTime (when to dose?)
-String lastDose; //dateTime
-String currentTime;//dateTime
+String whenDose;    // dateTime (when to dose?)
+String lastDose;    // dateTime
+String currentTime; // dateTime
 
-// String payload;
+extDcMotor* motors[4];  // hier stop ik alle motoren in, dat bespaard vier keer dezelfde code clusterfucken
 extDcMotor motor1(0, 1);
 extDcMotor motor2(2, 3);
 extDcMotor motor3(4, 5);
 extDcMotor motor4(6, 7);
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  bool _Ch1 = Ch1;
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
+String byteToString(byte *_byte, unsigned _len)
+{
+  String _ret = "";
 
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-    bool _Ch1 = 1;
-    digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-    motor1.forward();
-    Serial.print(F("\tCh1: ") + String(_Ch1));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_Ch1).c_str());
-  } else {
-    bool _Ch1 = 0;
-    digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-    motor1.stop();
-    Serial.print(F("\tCh1: ") + String(_Ch1));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_Ch1).c_str());
-    Ch1 = _Ch1;
+  for (unsigned int i = 0; i < _len; i++)
+  {
+    _ret += (char)_byte[i];
   }
-  if ((char)payload[0] == 'ON') {
-    // digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // // but actually the LED is on; this is because
-    // // it is active low on the ESP-01)
-    motor1.forward();
-    Serial.print(F("\tCh1: ") + String(_Ch1));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_Ch1).c_str());
-  } else {
-    bool _Ch1 = 0;
-    digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-    motor1.stop();
-    Serial.print(F("\tCh1: ") + String(_Ch1));
-    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_Ch1).c_str());
+
+  return _ret;
+}
+
+void callback(char *topic, byte *payload, unsigned int length) // de payload die je krijgt moet zijn in de form van XY X = 1 of 0 en Y = motor nummer
+{
+  String _payload = byteToString(payload, length);
+
+  Serial.println("Message arrived [" + (String)topic + "]: " + _payload);
+
+  switch (_payload[0])
+  {
+  case '0': // off
+    digitalWrite(LED_BUILTIN, LOW); // Turn the LED on (Note that LOW is the voltage level
+    Serial.print(F("\tChannel OFF: ") + String(_payload[1]));
+    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_payload[1]).c_str());
+
+    motors[String(_payload[1]).toInt()]->stop();
+    break;
+  case '1': // on
+    digitalWrite(LED_BUILTIN, HIGH); // Turn the LED off (Note that LOW is the voltage level
+    Serial.print(F("\tChannel ON: ") + String(_payload[1]));
+    MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch1/state")).c_str(), String(_payload[1]).c_str());
+
+    motors[String(_payload[1]).toInt()]->forward();
+    break;
   }
 }
 
-
-void threadPublishCallback() {
-  float _CurrentPh;
-  bool _Ch1;
-  bool _Ch2;
-  bool _Ch3;
-  bool _Ch4;
+void threadPublishCallback()
+{
+  float _CurrentPh = 0;
 
   Serial.print(F("threadPublishCallback: ") + String(millis() / 1000));
 
@@ -115,52 +96,50 @@ void threadPublishCallback() {
   // Serial.print(F("\tCh4: ") + String(_Ch4));
   // MQTTclient.subscribe(String(F("actuators/") + clientId + F("/Ch4/command")).c_str());
   // MQTTclient.publish(String(F("actuators/") + clientId + F("/Ch4/state")).c_str(), String(_Ch4).c_str());
-  //mqtt vars
-  String  _payload = "{\"clientId\":";
-          _payload += (String)clientId;
+  // mqtt vars
+  String _payload = "{\"clientId\":";
+  _payload += (String)clientId;
 
-          _payload += ",\"CurrentPh\":";
-          _payload += (float)_CurrentPh;
+  _payload += ",\"CurrentPh\":";
+  _payload += String(_CurrentPh);
 
-          _payload += ",\"Ch1\":";
-          _payload += (bool)_Ch1;
+  _payload += ",\"Ch1\":";
+  _payload += String(channel[0]);
 
-          _payload += ",\"Ch2\":";
-          _payload += (bool)_Ch2;
+  _payload += ",\"Ch2\":";
+  _payload += String(channel[1]);
 
-          _payload += ",\"Ch3\":";
-          _payload += (bool)_Ch3;
+  _payload += ",\"Ch3\":";
+  _payload += String(channel[2]);
 
-          _payload += ",\"Ch4\":";
-          _payload += (bool)_Ch4;
-          // float currentDose;
-          // float targetDose;
-          //
-          // String whenDose; //dateTime (when to dose?)
-          // String lastDose; //dateTime
-          // String currentTime;//dateTime
-          // _payload += ",\"currentDose\":";
-          // _payload += (float)currentDose;
-          // _payload += ",\"targetDose\":";
-          // _payload += (float)targetDose;
-          //
-          // _payload += ",\"whenDose\":";
-          // _payload += (String)whenDose;
-          // _payload += ",\"lastDose\":";
-          // _payload += (String)lastDose;
+  _payload += ",\"Ch4\":";
+  _payload += String(channel[3]);
+  // float currentDose;
+  // float targetDose;
+  //
+  // String whenDose; //dateTime (when to dose?)
+  // String lastDose; //dateTime
+  // String currentTime;//dateTime
+  // _payload += ",\"currentDose\":";
+  // _payload += (float)currentDose;
+  // _payload += ",\"targetDose\":";
+  // _payload += (float)targetDose;
+  //
+  // _payload += ",\"whenDose\":";
+  // _payload += (String)whenDose;
+  // _payload += ",\"lastDose\":";
+  // _payload += (String)lastDose;
 
-          Serial.println(F("\ttime: ") + String(timeClient.getEpochTime()));
-          MQTTclient.publish(String(F("sensors/") + clientId + F("/debug/connected")).c_str(), String(timeClient.getEpochTime()).c_str());
+  Serial.println(F("\ttime: ") + String(timeClient.getEpochTime()));
+  MQTTclient.publish(String(F("sensors/") + clientId + F("/debug/connected")).c_str(), String(timeClient.getEpochTime()).c_str());
 
-          _payload += "}";
+  _payload += "}";
 
-          MQTTclient.publish(String(F("sensors/") + clientId + F("/json")).c_str(), _payload.c_str());
+  MQTTclient.publish(String(F("sensors/") + clientId + F("/json")).c_str(), _payload.c_str());
 }
 
 // Thread threadCurrentLog = Thread();
 // StaticThreadController<1> threadController (&threadCurrentLog);
-
-
 
 boolean reconnect() // Called when client is disconnected from the MQTT server
 {
@@ -193,58 +172,63 @@ String generateClientIdFromMac() // Convert the WiFi MAC address to String
   return _output;
 }
 
-
-
-String macToStr(const uint8_t* mac)
+/*String macToStr(const uint8_t *mac) // ongebruikte functie
 {
   String result;
   for (int i = 0; i < 6; ++i)
   {
     result += String(mac[i], 16);
-    if (i < 5) result += ':';
+    if (i < 5)
+      result += ':';
   }
   return result;
-}
+}*/
 
 void setup()
 {
   Serial.begin(115200);
   // Serial.print("SDA: ");Serial.print(SDA);
   // Serial.print(" SCL: ");Serial.println(SCL);
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  Serial.println("Connecting to: " + (String)ssid);
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   clientId += F("-") + generateClientIdFromMac();
-  while (WiFi.status() != WL_CONNECTED) {
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
     Serial.print(".");
   }
-  Serial.println("");
+  Serial.println();
+
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
   Wire.begin(SDA, SCL);
 
   if (!mcp1.begin_I2C(0x20))
   {
     Serial.println(F("MCPERR"));
-    while(1);
+
+    while (1)
+    {
+    }
   }
   else
   {
-    Serial.println("Setup channel 1");
-    motor1.begin(&mcp1);
-    motor1.stop();
-    Serial.println("Setup channel 2");
-    motor2.begin(&mcp1);
-    motor2.stop();
-    Serial.println("Setup channel 3");
-    motor3.begin(&mcp1);
-    motor3.stop();
-    Serial.println("Setup channel 4");
-    motor4.begin(&mcp1);
-    motor4.stop();
+    motors[0] = &motor1;
+    motors[1] = &motor2;
+    motors[2] = &motor3;
+    motors[3] = &motor4;
+
+    for (unsigned _i = 0; _i < 4; _i++)
+    {
+      Serial.println("Setup channel: " + String(_i));
+      motors[_i]->begin(&mcp1);
+      motors[_i]->stop();
+    }
   }
 
   MQTTclient.setServer(mqtt_server, mqtt_port);
@@ -253,33 +237,35 @@ void setup()
   threadPublish.enabled = true;
   threadPublish.setInterval(LOGPERIOD);
   threadPublish.onRun(threadPublishCallback);
-  if (!MQTTclient.connected()) {
-    reconnect();
-  }
+
+  /*  if (!MQTTclient.connected())    // overbodig, gebeurd al in loop
+    {
+      reconnect();
+    }*/
 }
 
 void loop()
 {
   // Serial.println("arrived at loop");
   if (!MQTTclient.connected())
-{
-  unsigned long _now = millis();
-
-  if (_now - lastReconnectAttempt > 5000) // try to reconnect every 5000 milliseconds
   {
-    lastReconnectAttempt = _now;
+    unsigned long _now = millis();
 
-    if (reconnect())
+    if (_now - lastReconnectAttempt > 5000) // try to reconnect every 5000 milliseconds
     {
-      lastReconnectAttempt = 0;
+      lastReconnectAttempt = _now;
+
+      if (reconnect())
+      {
+        lastReconnectAttempt = 0;
+      }
     }
   }
-}
-else
-{
-  MQTTclient.loop();
-}
+  else
+  {
+    MQTTclient.loop();
+  }
 
-// Run threads, this makes it all work on time!
-threadController.run();
+  // Run threads, this makes it all work on time!
+  threadController.run();
 }
