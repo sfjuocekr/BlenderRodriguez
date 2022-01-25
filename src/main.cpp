@@ -46,22 +46,24 @@ void callback(char *topic, byte *payload, unsigned int length) // de payload die
   uint8_t _tLength = _topic.length();
   Serial.println(F("_tLength: ") + String(_tLength));
 
-  // Get first index delimiter (/)
+  // Get index1 delimiter
   uint8_t _index1 = _topic.indexOf('/');
 
   Serial.println(F("index1: ") + String(_index1));
-  // extract device name
+  // extract device type
   String _DeviceType = _topic.substring(0, _index1);
 
   Serial.println(F("_DeviceType: ") + String(_DeviceType));
-
+// Get index2 delimiter
   uint8_t _index2 = _topic.indexOf('/',_index1+1);
   Serial.println(F("_index2: ") + String(_index2));
+  // extract device name
   String _DeviceName = _topic.substring(_index1+1, _index2+1);
   Serial.println(F("_DeviceName: ") + String(_DeviceName));
-
+// Get index3 delimiter
   uint8_t _index3 = _topic.indexOf('/',_index2+1);
   Serial.println(F("_index2: ") + String(_index3));
+  // extract device channel
   String _channel = _topic.substring(_index2+1, _index3+1);
   Serial.println(F("_channel: ") + String(_channel));
   //extract number from _channel
