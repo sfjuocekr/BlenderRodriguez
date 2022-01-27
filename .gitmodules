@@ -1,0 +1,3 @@
+[submodule "lib/Extended_DCMOTOR"]
+	path = lib/Extended_DCMOTOR
+	url = https://github.com/sfjuocekr/Extended_DCMOTOR
