@@ -15,8 +15,8 @@ switch:
     unique_id: "BlenderRodriguez-MAC/Ch0"
     payload_on: 1
     payload_off: 0
-    state_on: 1
-    state_off: 0
+    state_on: "ON"
+    state_off: "OFF"
     optimistic: false
     qos: 0
     retain: true
@@ -27,8 +27,8 @@ switch:
     unique_id: "BlenderRodriguez-MAC/Ch1"
     payload_on: 1
     payload_off: 0
-    state_on: 1
-    state_off: 0
+    state_on: "ON"
+    state_off: "OFF"
     optimistic: false
     qos: 0
     retain: true
@@ -39,8 +39,8 @@ switch:
     unique_id: "BlenderRodriguez-MAC/Ch2"
     payload_on: 1
     payload_off: 0
-    state_on: 0
-    state_off: 1
+    state_on: "ON"
+    state_off: "OFF"
     optimistic: false
     qos: 0
     retain: true
@@ -51,3 +51,8 @@ switch:
     unique_id: "BlenderRodriguez-MAC/Ch3"
     payload_on: 1
     payload_off: 0
+    state_on: "ON"
+    state_off: "OFF"
+    optimistic: false
+    qos: 0
+    retain: true
