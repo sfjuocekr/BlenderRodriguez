@@ -37,24 +37,24 @@ String byteToString(byte *_byte, unsigned _len)
 void callback(char *topic, byte *payload, unsigned int length) // payload is 1 of 0
 {
   String _payload = byteToString(payload, length);
-  // Serial.println("MOTOR from topic: " + String(topic[partTopic.length() ]));
-  unsigned _motorNumber = String(topic[partTopic.length()]).toInt() - 1;
+  Serial.println("MOTOR from topic: " + String(topic[partTopic.length() ]));
+  unsigned _motorNumber = String(topic[partTopic.length()]).toInt();
 
-  // Serial.println("Message arrived [" + String(topic) + "]: " + _payload);
-  // Serial.println("MOTOR actuated: " + String(_motorNumber + 1));
+  Serial.println("Message arrived [" + String(topic) + "]: " + _payload);
+  Serial.println("MOTOR actuated: " + String(_motorNumber ));
 
   switch (_payload[0])
   {
   case '0':                         // off
     digitalWrite(LED_BUILTIN, LOW); // Turn the LED on (Note that LOW is the voltage level
-    // Serial.println(F("\tChannel OFF: ") + String(_motorNumber + 1));
+    Serial.println(F("\tChannel OFF: ") + String(_motorNumber ));
     MQTTclient.publish(String(partTopic + String(_motorNumber) + F("/state")).c_str(), "OFF");
     channel[_motorNumber] = false;
     motors[_motorNumber]->stop();
     break;
   case '1':                          // on
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED off (Note that LOW is the voltage level
-    // Serial.println(F("\tChannel ON: ") + String(_motorNumber + 1));
+    Serial.println(F("\tChannel ON: ") + String(_motorNumber ));
     MQTTclient.publish(String(partTopic + String(_motorNumber) + F("/state")).c_str(), "ON");
     channel[_motorNumber] = true;
     motors[_motorNumber]->forward();
@@ -103,7 +103,7 @@ void subscribeMQTT()  // Doe hier je subscriptions
 {
   for (unsigned _i = 0; _i < 4; _i++)
   {
-    MQTTclient.subscribe(String(partTopic + String(_i + 1) + F("/command")).c_str());
+    MQTTclient.subscribe(String(partTopic + String(_i ) + F("/command")).c_str());
     // debugging subscrition topics...
     Serial.print(F("Subscribing to: "));
     Serial.println(String(partTopic + String(_i) + F("/command")).c_str());
@@ -116,8 +116,8 @@ boolean reconnect() // Called when client is disconnected from the MQTT server
   {
     timeClient.update(); // Is this the right time to update the time, when we lost connection?
 
-    Serial.print(F("reconnect: ") + String(millis() / 1000));
-    Serial.println(F("\ttime: ") + String(timeClient.getEpochTime()));
+    // Serial.print(F("reconnect: ") + String(millis() / 1000));
+    // Serial.println(F("\ttime: ") + String(timeClient.getEpochTime()));
     MQTTclient.publish(String(F("sensors/") + clientId + F("/debug/connected")).c_str(), String(timeClient.getEpochTime()).c_str());
 
     subscribeMQTT();
@@ -186,7 +186,7 @@ void setup()
     {
       Serial.println("Setup channel: " + String(_i));
 
-      motors[_i] = new extDcMotor(_i * 2, _i * 2 + 1); // dit zijn je motoren!!!
+      motors[_i] = new extDcMotor(_i * 2, _i * 2 + 1 ); // dit zijn je motoren!!!
       motors[_i]->begin(&mcp1);
     }
   }

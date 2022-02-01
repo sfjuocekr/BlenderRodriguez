@@ -10,9 +10,9 @@ sensor:
 switch:
   - platform: mqtt
     name: "Doser Ch. 1"
-    command_topic: "actuators/BlenderRodriguez-MAC/Ch1/command"
-    state_topic: "actuators/BlenderRodriguez-MAC/Ch1/state"
-    unique_id: "BlenderRodriguez-MAC/Ch1"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch0/command"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch0/state"
+    unique_id: "BlenderRodriguez-MAC/Ch0"
     payload_on: 1
     payload_off: 0
     state_on: 1
@@ -22,9 +22,9 @@ switch:
     retain: true
   - platform: mqtt
     name: "Doser Ch. 2"
-    state_topic: "actuators/BlenderRodriguez-MAC/Ch2/state"
-    command_topic: "actuators/BlenderRodriguez-MAC/Ch2/command"
-    unique_id: "BlenderRodriguez-MAC/Ch2"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch1/state"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch1/command"
+    unique_id: "BlenderRodriguez-MAC/Ch1"
     payload_on: 1
     payload_off: 0
     state_on: 1
@@ -34,9 +34,9 @@ switch:
     retain: true
   - platform: mqtt
     name: "Doser Ch. 3"
-    state_topic: "actuators/BlenderRodriguez-MAC/Ch3/state"
-    command_topic: "actuators/BlenderRodriguez-MAC/Ch3/command"
-    unique_id: "BlenderRodriguez-MAC/Ch3"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch2/state"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch2/command"
+    unique_id: "BlenderRodriguez-MAC/Ch2"
     payload_on: 1
     payload_off: 0
     state_on: 0
@@ -46,8 +46,8 @@ switch:
     retain: true
   - platform: mqtt
     name: "Doser Ch. 4"
-    state_topic: "actuators/BlenderRodriguez-MAC/Ch4/state"
-    command_topic: "actuators/BlenderRodriguez-MAC/Ch4/command"
-    unique_id: "BlenderRodriguez-MAC/Ch4"
+    state_topic: "actuators/BlenderRodriguez-MAC/Ch3/state"
+    command_topic: "actuators/BlenderRodriguez-MAC/Ch3/command"
+    unique_id: "BlenderRodriguez-MAC/Ch3"
     payload_on: 1
     payload_off: 0
