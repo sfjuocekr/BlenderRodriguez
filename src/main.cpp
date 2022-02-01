@@ -35,31 +35,27 @@ String byteToString(byte *_byte, unsigned _len)
 }
 
 void callback(char *topic, byte *payload, unsigned int length) // payload is 1 of 0
-{                                                              
-  // partTopic = actuators/BlenderRodriguez-425a18941/Ch
-  //     topic = actuators/BlenderRodriguez-425a18941/Ch4/command
-  //             012345678901234567890123456789012345678901234567890
-  //                                                    X
+{
   String _payload = byteToString(payload, length);
-  Serial.println("MOTOR: " + String(topic[partTopic.length() + 1]));
-  unsigned _motorNumber = String(topic[partTopic.length() + 1]).toInt();
+  // Serial.println("MOTOR from topic: " + String(topic[partTopic.length() ]));
+  unsigned _motorNumber = String(topic[partTopic.length()]).toInt() - 1;
 
-  Serial.println("Message arrived [" + String(topic) + "]: " + _payload);
-  Serial.println("Motor: " + String(_motorNumber));
+  // Serial.println("Message arrived [" + String(topic) + "]: " + _payload);
+  // Serial.println("MOTOR actuated: " + String(_motorNumber + 1));
 
   switch (_payload[0])
   {
   case '0':                         // off
     digitalWrite(LED_BUILTIN, LOW); // Turn the LED on (Note that LOW is the voltage level
-    Serial.println(F("\tChannel OFF: ") + String(_motorNumber));
-    MQTTclient.publish(String(partTopic + String(_motorNumber + 1) + F("/state")).c_str(), "OFF");
+    // Serial.println(F("\tChannel OFF: ") + String(_motorNumber + 1));
+    MQTTclient.publish(String(partTopic + String(_motorNumber) + F("/state")).c_str(), "OFF");
     channel[_motorNumber] = false;
     motors[_motorNumber]->stop();
     break;
   case '1':                          // on
     digitalWrite(LED_BUILTIN, HIGH); // Turn the LED off (Note that LOW is the voltage level
-    Serial.println(F("\tChannel ON: ") + String(_motorNumber));
-    MQTTclient.publish(String(partTopic + String(_motorNumber + 1) + F("/state")).c_str(), "ON");
+    // Serial.println(F("\tChannel ON: ") + String(_motorNumber + 1));
+    MQTTclient.publish(String(partTopic + String(_motorNumber) + F("/state")).c_str(), "ON");
     channel[_motorNumber] = true;
     motors[_motorNumber]->forward();
     break;
@@ -70,9 +66,9 @@ void threadPublishCallback()
 {
   float _CurrentPh = 0;
 
-  Serial.print(F("threadPublishCallback: ") + String(millis() / 1000));
-
-  Serial.print(F("\tCurrentPh: ") + String(_CurrentPh));
+  // Serial.print(F("threadPublishCallback: ") + String(millis() / 1000));
+  //
+  // Serial.print(F("\tCurrentPh: ") + String(_CurrentPh));
   MQTTclient.publish(String(F("sensors/") + clientId + F("/CurrentPh")).c_str(), String(_CurrentPh).c_str());
 
   // JSON Payload
@@ -95,7 +91,7 @@ void threadPublishCallback()
   _payload += ",\"Ch4\":";
   _payload += String(channel[3]);
 
-  Serial.println(F("\ttime: ") + String(timeClient.getEpochTime()));
+  // Serial.println(F("\ttime: ") + String(timeClient.getEpochTime()));
   MQTTclient.publish(String(F("sensors/") + clientId + F("/debug/connected")).c_str(), String(timeClient.getEpochTime()).c_str());
 
   _payload += "}";
